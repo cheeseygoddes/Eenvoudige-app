@@ -12,7 +12,7 @@ let lang = localStorage.getItem(LANG_KEY) || "en";
 let translations = {};
 let tasks = loadTasks();
 let pendingActivity = null;
-let dragState = null;
+let modalType = "must";
 
 const mustCategories = ["work", "health", "personal", "urgent", "other"];
 const wantCategories = ["fun", "relax", "social", "learn", "other"];
@@ -69,6 +69,16 @@ function catClass(cat) {
   return "cat-" + (cat || "other");
 }
 
+function _(key) {
+  const keys = key.split(".");
+  let val = translations;
+  for (const k of keys) {
+    if (val && val[k] !== undefined) val = val[k];
+    else return key.split(".").pop();
+  }
+  return val || key.split(".").pop();
+}
+
 function render() {
   const mustFilter = document.querySelector("#mustFilters .active")?.dataset?.filter || "all";
   const wantFilter = document.querySelector("#wantFilters .active")?.dataset?.filter || "all";
@@ -89,7 +99,7 @@ function applyFilter(items, filter) {
       const d = new Date(t.datum);
       const start = new Date(now);
       start.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1));
-      start.setHours(0,0,0,0);
+      start.setHours(0, 0, 0, 0);
       const end = new Date(start);
       end.setDate(start.getDate() + 6);
       return d >= start && d <= end;
@@ -106,16 +116,16 @@ function renderList(listId, items, filter, type) {
   const ul = document.getElementById(listId);
   const filtered = applyFilter(items, filter);
   if (!filtered.length) {
-    ul.innerHTML = `<li class="empty-msg" data-i18n="noTasks">${_( "noTasks")}</li>`;
+    ul.innerHTML = `<li class="empty-msg" data-i18n="noTasks">${_("noTasks")}</li>`;
     return;
   }
-  ul.innerHTML = filtered.map((t, i) => `
-    <li data-id="${t.id}" data-type="${type}" data-index="${i}">
+  ul.innerHTML = filtered.map(t => `
+    <li data-id="${t.id}" data-type="${type}">
       <span class="drag-handle" data-drag="true">&#9776;</span>
       <div class="task-content">
         <span class="task-text">${escapeHtml(t.omschrijving)}</span>
         <div class="task-meta">
-          <span class="${catClass(t.categorie)}">${_( "categories." + t.categorie) || t.categorie}</span>
+          <span class="${catClass(t.categorie)}">${catLabel(t.categorie)}</span>
           ${t.datum ? `<span>${t.datum}</span>` : ""}
           ${t.waarde ? `<span>&#9733; ${t.waarde}</span>` : ""}
         </div>
@@ -137,27 +147,58 @@ function renderStats(barId, items, filter) {
   bar.innerHTML = `<span class="stat-chip"><strong>${total}</strong> ${_("totalTasks")}</span>` + chips;
 }
 
-function addTask(type) {
-  const prefix = type === "must" ? "must" : "want";
-  const datum = document.getElementById(prefix + "Date").value || todayStr();
-  const categorie = document.getElementById(prefix + "Cat").value || "other";
-  const omschrijving = document.getElementById(prefix + "Desc").value.trim();
-  const waarde = parseInt(document.getElementById(prefix + "Val").value) || 0;
+// --- Modal ---
+
+function openModal(type) {
+  modalType = type;
+  const overlay = document.getElementById("taskModal");
+  const title = document.getElementById("modalTitle");
+  const catSelect = document.getElementById("modalCat");
+  const addBtn = document.getElementById("modalAddBtn");
+  const cats = type === "must" ? mustCategories : wantCategories;
+
+  title.textContent = type === "must" ? _("mustDo") : _("wantToDo");
+  document.getElementById("modalDate").value = todayStr();
+
+  catSelect.innerHTML = `<option value="">${_("selectCategory")}</option>`;
+  cats.forEach(c => {
+    catSelect.innerHTML += `<option value="${c}">${catLabel(c)}</option>`;
+  });
+
+  addBtn.className = "modal-add-btn " + (type === "must" ? "modal-add-must" : "modal-add-want");
+  addBtn.textContent = _("add");
+
+  document.getElementById("modalDesc").value = "";
+  document.getElementById("modalVal").value = "";
+  overlay.hidden = false;
+  setTimeout(() => document.getElementById("modalDesc").focus(), 300);
+}
+
+function closeModal() {
+  document.getElementById("taskModal").hidden = true;
+}
+
+function addTaskFromModal() {
+  const datum = document.getElementById("modalDate").value || todayStr();
+  const categorie = document.getElementById("modalCat").value || "other";
+  const omschrijving = document.getElementById("modalDesc").value.trim();
+  const waarde = parseInt(document.getElementById("modalVal").value) || 0;
   if (!omschrijving) return;
-  const task = { id: genId(), datum, categorie, omschrijving, waarde, createdAt: Date.now() };
-  tasks[type].unshift(task);
+  tasks[modalType].unshift({ id: genId(), datum, categorie, omschrijving, waarde, createdAt: Date.now() });
   saveTasks();
   render();
-  document.getElementById(prefix + "Desc").value = "";
-  document.getElementById(prefix + "Val").value = "";
-  document.getElementById(prefix + "Desc").focus();
+  closeModal();
 }
+
+// --- Delete ---
 
 function deleteTask(type, id) {
   tasks[type] = tasks[type].filter(t => t.id !== id);
   saveTasks();
   render();
 }
+
+// --- Bored API ---
 
 async function fetchBoredActivity() {
   const btn = document.getElementById("boredBtn");
@@ -171,36 +212,37 @@ async function fetchBoredActivity() {
     document.getElementById("suggestionText").textContent = data.activity;
     document.getElementById("suggestion").hidden = false;
   } catch {
-    alert("Could not fetch an activity. Try again!");
+    alert("Could not fetch an activity.");
   } finally {
     btn.disabled = false;
     btn.innerHTML = _("bored");
   }
 }
 
-// --- Drag to reorder (touch + mouse) ---
+// --- Drag to reorder (no flicker — DOM-based) ---
 
 function initDrag() {
-  let dragEl, dragIndex, dragType, clone, startY, origY;
+  let dragEl, dragType, startY, currentTarget;
 
-  function onStart(e, el) {
-    const li = el.closest("li");
-    if (!li) return;
+  function getDragType(el) {
+    const list = el.closest(".task-list");
+    return list?.id === "mustList" ? "must" : "want";
+  }
+
+  function onStart(e, handle) {
+    const li = handle.closest("li");
+    if (!li || li.classList.contains("empty-msg")) return;
     const section = li.closest(".section");
     const activeFilter = section?.querySelector(".filter-bar .active")?.dataset?.filter;
     if (activeFilter && activeFilter !== "all") return;
-    const type = li.dataset.type;
-    const id = li.dataset.id;
-    const items = tasks[type];
-    const idx = items.findIndex(t => t.id === id);
-    if (idx === -1) return;
-    const touch = e.touches ? e.touches[0] : e;
+
     dragEl = li;
-    dragType = type;
-    dragIndex = idx;
-    startY = touch.clientY;
-    origY = li.getBoundingClientRect().top;
-    li.classList.add("dragging");
+    dragType = getDragType(li);
+    startY = e.touches ? e.touches[0].clientY : e.clientY;
+    currentTarget = null;
+
+    dragEl.classList.add("dragging");
+
     document.addEventListener("touchmove", onMove, { passive: false });
     document.addEventListener("touchend", onEnd);
     document.addEventListener("mousemove", onMove);
@@ -210,40 +252,62 @@ function initDrag() {
 
   function onMove(e) {
     if (!dragEl) return;
-    const touch = e.touches ? e.touches[0] : e;
-    const dy = touch.clientY - startY;
+    const y = e.touches ? e.touches[0].clientY : e.clientY;
     const list = dragEl.parentElement;
     const items = list.querySelectorAll("li:not(.empty-msg)");
-    let newIdx = dragIndex;
-    items.forEach((li, i) => {
-      const rect = li.getBoundingClientRect();
-      if (touch.clientY > rect.top + rect.height / 2) {
-        newIdx = i + 1;
+
+    // Remove previous indicators
+    items.forEach(li => li.classList.remove("drag-over", "drag-target"));
+
+    let target = null;
+    items.forEach(li => {
+      if (li === dragEl) return;
+      const r = li.getBoundingClientRect();
+      const mid = r.top + r.height / 2;
+      if (y > r.top && y < r.bottom) {
+        target = { el: li, pos: y > mid ? "after" : "before" };
       }
-      li.classList.remove("drag-over");
     });
-    if (newIdx > dragIndex && newIdx < items.length) {
-      items[newIdx].classList.add("drag-over");
+
+    if (target) {
+      currentTarget = target;
+      target.el.classList.add("drag-over");
+      // Insert a visual gap
+      if (target.pos === "before") {
+        list.insertBefore(dragEl, target.el);
+      } else {
+        list.insertBefore(dragEl, target.el.nextSibling);
+      }
+    } else {
+      // At edges — move to top or bottom
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (first && y < first.getBoundingClientRect().top) {
+        list.insertBefore(dragEl, first);
+      } else if (last && y > last.getBoundingClientRect().bottom) {
+        list.appendChild(dragEl);
+      }
+      currentTarget = null;
     }
     if (e.cancelable) e.preventDefault();
   }
 
   function onEnd() {
     if (!dragEl) return;
+    dragEl.classList.remove("dragging");
+
+    // Read final DOM order and apply to array
     const list = dragEl.parentElement;
     const items = list.querySelectorAll("li:not(.empty-msg)");
-    const targetEl = list.querySelector(".drag-over");
-    let newIdx = items.length - 1;
-    if (targetEl) {
-      newIdx = Array.from(items).indexOf(targetEl);
-      targetEl.classList.remove("drag-over");
-    }
-    dragEl.classList.remove("dragging");
+    items.forEach(li => li.classList.remove("drag-over", "drag-target"));
+
+    const newOrder = Array.from(items).map(li => li.dataset.id);
     const arr = tasks[dragType];
-    const [moved] = arr.splice(dragIndex, 1);
-    arr.splice(newIdx, 0, moved);
+    const ordered = newOrder.map(id => arr.find(t => t.id === id)).filter(Boolean);
+    const remaining = arr.filter(t => !newOrder.includes(t.id));
+    tasks[dragType] = [...ordered, ...remaining];
     saveTasks();
-    render();
+
     dragEl = null;
     document.removeEventListener("touchmove", onMove);
     document.removeEventListener("touchend", onEnd);
@@ -252,13 +316,13 @@ function initDrag() {
   }
 
   document.addEventListener("touchstart", e => {
-    const handle = e.target.closest("[data-drag]");
-    if (handle) onStart(e, handle);
+    const h = e.target.closest("[data-drag]");
+    if (h) onStart(e, h);
   }, { passive: true });
 
   document.addEventListener("mousedown", e => {
-    const handle = e.target.closest("[data-drag]");
-    if (handle) onStart(e, handle);
+    const h = e.target.closest("[data-drag]");
+    if (h) onStart(e, h);
   });
 }
 
@@ -273,24 +337,12 @@ async function loadLang(l) {
   }
   document.getElementById("langBtn").textContent = l === "nl" ? "EN" : "NL";
   document.querySelectorAll("[data-i18n]").forEach(el => {
-    const key = el.dataset.i18n;
-    el.textContent = _(key);
+    el.textContent = _(el.dataset.i18n);
   });
   document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
-    const key = el.dataset.i18nPlaceholder;
-    el.placeholder = _(key);
+    el.placeholder = _(el.dataset.i18nPlaceholder);
   });
   render();
-}
-
-function _(key) {
-  const keys = key.split(".");
-  let val = translations;
-  for (const k of keys) {
-    if (val && val[k] !== undefined) val = val[k];
-    else return key.split(".").pop();
-  }
-  return val || key.split(".").pop();
 }
 
 function toggleLang() {
@@ -304,23 +356,26 @@ function toggleLang() {
 async function init() {
   await loadLang(lang);
 
-  document.getElementById("mustDate").value = todayStr();
-  document.getElementById("wantDate").value = todayStr();
+  // Modal
+  document.querySelectorAll("[data-modal]").forEach(btn => {
+    btn.addEventListener("click", () => openModal(btn.dataset.modal));
+  });
+  document.getElementById("modalClose").addEventListener("click", closeModal);
+  document.getElementById("taskModal").addEventListener("click", e => {
+    if (e.target.classList.contains("modal-overlay")) closeModal();
+  });
+  document.getElementById("modalAddBtn").addEventListener("click", addTaskFromModal);
+  document.getElementById("modalDesc").addEventListener("keydown", e => {
+    if (e.key === "Enter") addTaskFromModal();
+  });
 
-  document.getElementById("mustAddBtn").addEventListener("click", () => addTask("must"));
-  document.getElementById("wantAddBtn").addEventListener("click", () => addTask("want"));
+  // Bored
   document.getElementById("boredBtn").addEventListener("click", fetchBoredActivity);
-  document.getElementById("langBtn").addEventListener("click", toggleLang);
-
   document.getElementById("suggestionYes").addEventListener("click", () => {
     if (pendingActivity) {
       tasks.want.unshift({
-        id: genId(),
-        datum: todayStr(),
-        categorie: "fun",
-        omschrijving: pendingActivity,
-        waarde: 0,
-        createdAt: Date.now()
+        id: genId(), datum: todayStr(), categorie: "fun",
+        omschrijving: pendingActivity, waarde: 0, createdAt: Date.now()
       });
       saveTasks();
       render();
@@ -328,12 +383,12 @@ async function init() {
     document.getElementById("suggestion").hidden = true;
     pendingActivity = null;
   });
-
   document.getElementById("suggestionNo").addEventListener("click", () => {
     document.getElementById("suggestion").hidden = true;
     pendingActivity = null;
   });
 
+  // Filters
   document.querySelectorAll(".filter-bar").forEach(bar => {
     bar.addEventListener("click", e => {
       const btn = e.target.closest(".filter-btn");
@@ -344,13 +399,7 @@ async function init() {
     });
   });
 
-  document.getElementById("mustDesc").addEventListener("keydown", e => {
-    if (e.key === "Enter") addTask("must");
-  });
-  document.getElementById("wantDesc").addEventListener("keydown", e => {
-    if (e.key === "Enter") addTask("want");
-  });
-
+  // Delete via delegation
   document.addEventListener("click", e => {
     const btn = e.target.closest("[data-delete]");
     if (btn) {
@@ -358,6 +407,9 @@ async function init() {
       if (li) deleteTask(li.dataset.type, li.dataset.id);
     }
   });
+
+  // Lang
+  document.getElementById("langBtn").addEventListener("click", toggleLang);
 
   initDrag();
   render();

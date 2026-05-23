@@ -9,49 +9,43 @@
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
     body { font-family: system-ui, -apple-system, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; padding: 12px; color: #333; }
-    .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; }
+    .container { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 12px; padding-bottom: 80px; }
     .top-bar { display: flex; align-items: center; justify-content: space-between; padding: 8px 4px; }
     h1 { text-align: center; color: #fff; text-shadow: 0 2px 4px rgba(0,0,0,0.2); font-size: 1.4rem; margin: 0; }
-    .lang-btn { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; cursor: pointer; backdrop-filter: blur(4px); }
+    .lang-btn { background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; cursor: pointer; }
     .lang-btn:active { transform: scale(0.95); }
-    .section { background: rgba(255,255,255,0.95); border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); }
-    .section h2 { font-size: 1.1rem; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
-    .must-do h2 { color: #c62828; }
-    .want-to-do h2 { color: #1565c0; }
-    .filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .filter-btn { padding: 6px 14px; border: 1px solid #ddd; border-radius: 20px; background: #f5f5f5; color: #666; font-size: 0.8rem; cursor: pointer; }
+    .section { background: rgba(255,255,255,0.95); border-radius: 16px; padding: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.12); position: relative; }
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .section-header h2 { font-size: 1.1rem; display: flex; align-items: center; gap: 8px; margin: 0; }
+    .must-do .section-header h2 { color: #c62828; }
+    .want-to-do .section-header h2 { color: #1565c0; }
+    .fab { width: 36px; height: 36px; border: none; border-radius: 50%; font-size: 1.4rem; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.2); transition: transform 0.15s; flex-shrink: 0; }
+    .fab:active { transform: scale(0.9); }
+    .fab-must { background: #c62828; color: #fff; }
+    .fab-want { background: #1565c0; color: #fff; }
+    .filter-bar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+    .filter-btn { padding: 5px 12px; border: 1px solid #ddd; border-radius: 20px; background: #f5f5f5; color: #666; font-size: 0.75rem; cursor: pointer; }
     .filter-btn.active { background: #4CAF50; color: #fff; border-color: #4CAF50; }
-    .filter-btn:active { transform: scale(0.95); }
-    .add-form { display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding: 12px; background: #f8f9fa; border-radius: 12px; }
-    .add-form-row { display: flex; gap: 8px; }
-    .add-form-row input, .add-form-row select { flex: 1; padding: 10px 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.9rem; min-width: 0; }
-    .add-form-row input:focus, .add-form-row select:focus { outline: none; border-color: #4CAF50; }
-    .add-form-row input[type="date"] { flex: 0 0 auto; width: 140px; }
-    .add-form-row input[type="number"] { flex: 0 0 auto; width: 80px; }
-    .add-form .add-btn { padding: 10px; border: none; border-radius: 10px; font-size: 0.95rem; cursor: pointer; background: #4CAF50; color: #fff; font-weight: 600; }
-    .add-form .add-btn:active { transform: scale(0.97); }
-    .bored-btn { width: 100%; padding: 10px; border: none; border-radius: 10px; font-size: 0.9rem; cursor: pointer; background: #1565c0; color: #fff; font-weight: 600; margin-bottom: 8px; }
-    .bored-btn:disabled { background: #90caf9; cursor: not-allowed; }
+    .bored-btn { width: 100%; padding: 10px; border: none; border-radius: 10px; font-size: 0.85rem; cursor: pointer; background: #1565c0; color: #fff; font-weight: 600; margin-bottom: 8px; }
+    .bored-btn:disabled { background: #90caf9; }
     .bored-btn:active:not(:disabled) { transform: scale(0.97); }
     .suggestion { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #e3f2fd; border-radius: 10px; border: 1px solid #90caf9; margin-bottom: 8px; }
-    .suggestion-text { flex: 1; font-size: 0.9rem; color: #1565c0; word-break: break-word; }
+    .suggestion-text { flex: 1; font-size: 0.85rem; color: #1565c0; word-break: break-word; }
     .suggestion-actions { display: flex; gap: 6px; flex-shrink: 0; }
-    .suggestion-yes, .suggestion-no { width: 34px; height: 34px; border: none; border-radius: 50%; cursor: pointer; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; }
+    .suggestion-yes, .suggestion-no { width: 34px; height: 34px; border: none; border-radius: 50%; cursor: pointer; font-size: 1.1rem; }
     .suggestion-yes { background: #4CAF50; color: #fff; }
-    .suggestion-yes:active { transform: scale(1.1); }
     .suggestion-no { background: #e53935; color: #fff; }
-    .suggestion-no:active { transform: scale(1.1); }
     .suggestion[hidden] { display: none; }
-    .task-list { list-style: none; display: flex; flex-direction: column; gap: 6px; }
-    .task-list li { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; touch-action: none; }
-    .task-list li.dragging { opacity: 0.5; }
-    .task-list li.drag-over { border-color: #4CAF50; border-style: dashed; }
+    .task-list { list-style: none; display: flex; flex-direction: column; gap: 6px; min-height: 40px; }
+    .task-list li { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: #f8f9fa; border-radius: 10px; border: 1px solid #eee; transition: opacity 0.15s, border-color 0.15s; }
+    .task-list li.dragging { opacity: 0.4; border-color: #4CAF50; }
+    .task-list li.drag-over { border-color: #4CAF50; border-style: dashed; background: #e8f5e9; }
+    .task-list li.drag-target { border-top: 3px solid #4CAF50; }
     .drag-handle { font-size: 1.3rem; color: #bbb; cursor: grab; touch-action: none; user-select: none; padding: 4px; flex-shrink: 0; }
-    .drag-handle:active { cursor: grabbing; }
     .task-content { flex: 1; min-width: 0; }
-    .task-content .task-text { display: block; font-size: 0.9rem; word-break: break-word; }
-    .task-meta { display: flex; gap: 6px; flex-wrap: wrap; font-size: 0.75rem; color: #888; margin-top: 2px; }
-    .task-meta span { background: #eee; padding: 1px 8px; border-radius: 10px; }
+    .task-content .task-text { display: block; font-size: 0.85rem; word-break: break-word; }
+    .task-meta { display: flex; gap: 4px; flex-wrap: wrap; font-size: 0.7rem; color: #888; margin-top: 3px; }
+    .task-meta span { background: #eee; padding: 1px 7px; border-radius: 10px; }
     .task-meta .cat-work { background: #e3f2fd; color: #1565c0; }
     .task-meta .cat-health { background: #e8f5e9; color: #2e7d32; }
     .task-meta .cat-personal { background: #fce4ec; color: #c62828; }
@@ -61,23 +55,43 @@
     .task-meta .cat-social { background: #fff8e1; color: #f57f17; }
     .task-meta .cat-learn { background: #e8eaf6; color: #283593; }
     .task-meta .cat-other { background: #f5f5f5; color: #616161; }
-    .delete-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 1.3rem; padding: 4px; opacity: 0.5; flex-shrink: 0; }
+    .delete-btn { background: none; border: none; color: #e53935; cursor: pointer; font-size: 1.2rem; padding: 4px; opacity: 0.4; flex-shrink: 0; }
     .delete-btn:active { opacity: 1; }
-    .empty-msg { color: #999; text-align: center; padding: 20px 0; font-style: italic; font-size: 0.9rem; }
-    .stats-bar { display: flex; gap: 8px; flex-wrap: wrap; padding: 8px 0; margin-bottom: 8px; }
-    .stat-chip { background: #f5f5f5; padding: 4px 12px; border-radius: 16px; font-size: 0.75rem; color: #666; }
+    .empty-msg { color: #999; text-align: center; padding: 20px 0; font-style: italic; font-size: 0.85rem; }
+    .stats-bar { display: flex; gap: 6px; flex-wrap: wrap; padding: 6px 0; margin-bottom: 6px; }
+    .stat-chip { background: #f5f5f5; padding: 3px 10px; border-radius: 16px; font-size: 0.7rem; color: #666; }
     .stat-chip strong { color: #333; }
-    .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
+    .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Modal */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 100; display: flex; align-items: flex-end; justify-content: center; animation: fadeIn 0.2s; }
+    .modal-overlay[hidden] { display: none; }
+    .modal-sheet { background: #fff; width: 100%; max-width: 500px; border-radius: 20px 20px 0 0; padding: 20px 20px 30px; box-shadow: 0 -4px 20px rgba(0,0,0,0.15); animation: slideUp 0.25s ease-out; max-height: 85vh; overflow-y: auto; }
+    .modal-handle { width: 40px; height: 4px; background: #ddd; border-radius: 2px; margin: 0 auto 16px; }
+    .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .modal-header h3 { font-size: 1.1rem; margin: 0; }
+    .modal-close { background: none; border: none; font-size: 1.5rem; color: #999; cursor: pointer; padding: 4px; }
+    .modal-form { display: flex; flex-direction: column; gap: 12px; }
+    .modal-form label { font-size: 0.8rem; font-weight: 600; color: #555; }
+    .modal-form input, .modal-form select { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 0.95rem; }
+    .modal-form input:focus, .modal-form select:focus { outline: none; border-color: #4CAF50; }
+    .modal-form .form-row { display: flex; gap: 10px; }
+    .modal-form .form-row > * { flex: 1; }
+    .modal-form .modal-add-btn { padding: 14px; border: none; border-radius: 12px; font-size: 1rem; cursor: pointer; color: #fff; font-weight: 600; margin-top: 4px; }
+    .modal-add-btn:active { transform: scale(0.97); }
+    .modal-add-must { background: #c62828; }
+    .modal-add-want { background: #1565c0; }
     @media (min-width: 500px) {
       body { padding: 24px; }
-      .container { gap: 20px; }
+      .container { gap: 20px; padding-bottom: 0; }
       .section { padding: 24px; }
       h1 { font-size: 1.8rem; }
-      .add-form { flex-direction: row; flex-wrap: wrap; }
-      .add-form .add-btn { flex: 0 0 auto; width: auto; padding: 10px 24px; }
+      .modal-sheet { border-radius: 20px; margin-bottom: 10vh; }
+      .modal-overlay { align-items: center; }
     }
-    .hidden { display: none !important; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   </style>
 </head>
 <body>
@@ -89,62 +103,32 @@
     </div>
 
     <div class="section must-do">
-      <h2>&#128204; <span data-i18n="mustDo">Must Do</span></h2>
+      <div class="section-header">
+        <h2>&#128204; <span data-i18n="mustDo">Must Do</span></h2>
+        <button class="fab fab-must" data-modal="must">+</button>
+      </div>
       <div class="filter-bar" id="mustFilters">
         <button class="filter-btn active" data-filter="all" data-i18n="all">All</button>
         <button class="filter-btn" data-filter="today" data-i18n="today">Today</button>
         <button class="filter-btn" data-filter="week" data-i18n="week">This Week</button>
         <button class="filter-btn" data-filter="month" data-i18n="month">This Month</button>
       </div>
-      <div class="add-form" id="mustForm">
-        <div class="add-form-row">
-          <input type="date" id="mustDate">
-          <select id="mustCat">
-            <option value="" data-i18n="selectCategory">Select category</option>
-            <option value="work" data-i18n="categories.work">Work</option>
-            <option value="health" data-i18n="categories.health">Health</option>
-            <option value="personal" data-i18n="categories.personal">Personal</option>
-            <option value="urgent" data-i18n="categories.urgent">Urgent</option>
-            <option value="other" data-i18n="categories.other">Other</option>
-          </select>
-        </div>
-        <div class="add-form-row">
-          <input type="text" id="mustDesc" placeholder="Description" data-i18n-placeholder="description">
-          <input type="number" id="mustVal" placeholder="0" min="0" step="1">
-        </div>
-        <button class="add-btn" id="mustAddBtn" data-i18n="add">Add</button>
-      </div>
       <div class="stats-bar" id="mustStats"></div>
       <ul class="task-list" id="mustList"></ul>
     </div>
 
     <div class="section want-to-do">
-      <h2>&#127775; <span data-i18n="wantToDo">Want To Do</span></h2>
+      <div class="section-header">
+        <h2>&#127775; <span data-i18n="wantToDo">Want To Do</span></h2>
+        <button class="fab fab-want" data-modal="want">+</button>
+      </div>
       <div class="filter-bar" id="wantFilters">
         <button class="filter-btn active" data-filter="all" data-i18n="all">All</button>
         <button class="filter-btn" data-filter="today" data-i18n="today">Today</button>
         <button class="filter-btn" data-filter="week" data-i18n="week">This Week</button>
         <button class="filter-btn" data-filter="month" data-i18n="month">This Month</button>
       </div>
-      <div class="add-form" id="wantForm">
-        <div class="add-form-row">
-          <input type="date" id="wantDate">
-          <select id="wantCat">
-            <option value="" data-i18n="selectCategory">Select category</option>
-            <option value="fun" data-i18n="categories.fun">Fun</option>
-            <option value="relax" data-i18n="categories.relax">Relax</option>
-            <option value="social" data-i18n="categories.social">Social</option>
-            <option value="learn" data-i18n="categories.learn">Learn</option>
-            <option value="other" data-i18n="categories.other">Other</option>
-          </select>
-        </div>
-        <div class="add-form-row">
-          <input type="text" id="wantDesc" placeholder="Description" data-i18n-placeholder="description">
-          <input type="number" id="wantVal" placeholder="0" min="0" step="1">
-        </div>
-        <button class="add-btn" id="wantAddBtn" data-i18n="add">Add</button>
-      </div>
-      <button class="bored-btn" id="boredBtn" data-i18n="bored">🎲 I'm bored — suggest something!</button>
+      <button class="bored-btn" id="boredBtn" data-i18n="bored">&#127922; I'm bored — suggest something!</button>
       <div id="suggestion" class="suggestion" hidden>
         <span class="suggestion-text" id="suggestionText"></span>
         <div class="suggestion-actions">
@@ -156,6 +140,39 @@
       <ul class="task-list" id="wantList"></ul>
     </div>
   </div>
+
+  <!-- Add Task Modal -->
+  <div class="modal-overlay" id="taskModal" hidden>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3 id="modalTitle" data-i18n="add">Add Task</h3>
+        <button class="modal-close" id="modalClose">&times;</button>
+      </div>
+      <div class="modal-form">
+        <div>
+          <label data-i18n="date">Date</label>
+          <input type="date" id="modalDate">
+        </div>
+        <div>
+          <label data-i18n="category">Category</label>
+          <select id="modalCat"></select>
+        </div>
+        <div>
+          <label data-i18n="description">Description</label>
+          <input type="text" id="modalDesc" placeholder="e.g. Go for a run" data-i18n-placeholder="description">
+        </div>
+        <div class="form-row">
+          <div>
+            <label data-i18n="value">Value</label>
+            <input type="number" id="modalVal" placeholder="0" min="0" step="1">
+          </div>
+        </div>
+        <button class="modal-add-btn" id="modalAddBtn" data-i18n="add">Add</button>
+      </div>
+    </div>
+  </div>
+
   <script src="./app.js"></script>
 </body>
 </html>

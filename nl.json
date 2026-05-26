@@ -1,12 +1,11 @@
 {
-  "appTitle": "Taken Planner",
+  "appTitle": "Hey! \u270B",
   "mustDo": "Moet Doen",
   "wantToDo": "Wil Doen",
   "add": "Toevoegen",
-  "bored": "🎲 Verveel me — stel iets voor!",
+  "bored": "Verveel me \u2014 stel iets voor!",
   "loading": "Laden...",
-  "noTasks": "Nog geen taken",
-  "confirmAdd": "Toevoegen aan \"Wil Doen\"?",
+  "noTasks": "Nog niks \u2014 waar wacht je op?",
   "all": "Alles",
   "today": "Vandaag",
   "week": "Deze week",
@@ -15,21 +14,26 @@
   "category": "Categorie",
   "description": "Omschrijving",
   "value": "Waarde",
-  "priority": "Prioriteit",
-  "stats": "Overzicht",
-  "totalTasks": "Totaal taken",
+  "totalTasks": "totaal",
+  "selectCategory": "Kies categorie",
   "categories": {
     "work": "Werk",
     "health": "Gezondheid",
     "personal": "Persoonlijk",
     "urgent": "Urgent",
-    "fun": "Ontspanning",
-    "relax": "Relaxen",
+    "fun": "Plezier",
+    "relax": "Ontspanning",
     "social": "Sociaal",
     "learn": "Leren",
     "other": "Overig"
   },
-  "selectCategory": "Selecteer categorie",
-  "dragHint": "Sleep om te herordenen",
-  "filterPlaceholder": "Filter..."
+  "greetings": {
+    "morning": "Goedemorgen",
+    "afternoon": "Goedemiddag",
+    "evening": "Goedenavond",
+    "night": "H\u00e9 laat op"
+  },
+  "subEmpty": "Nog niks \u2014 waar wacht je op?",
+  "subOne": "1 taakje wacht op je",
+  "subTasks": "{n} taakjes liggen klaar"
 }

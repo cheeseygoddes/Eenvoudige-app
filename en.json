@@ -1,12 +1,11 @@
 {
-  "appTitle": "Task Planner",
+  "appTitle": "Hey! \u270B",
   "mustDo": "Must Do",
   "wantToDo": "Want To Do",
   "add": "Add",
-  "bored": "🎲 I'm bored — suggest something!",
+  "bored": "I'm bored \u2014 suggest something!",
   "loading": "Loading...",
-  "noTasks": "No tasks yet",
-  "confirmAdd": "Add to Want To Do?",
+  "noTasks": "Nothing yet \u2014 what are you waiting for?",
   "all": "All",
   "today": "Today",
   "week": "This Week",
@@ -15,9 +14,8 @@
   "category": "Category",
   "description": "Description",
   "value": "Value",
-  "priority": "Priority",
-  "stats": "Overview",
-  "totalTasks": "Total tasks",
+  "totalTasks": "total",
+  "selectCategory": "Select category",
   "categories": {
     "work": "Work",
     "health": "Health",
@@ -29,7 +27,13 @@
     "learn": "Learn",
     "other": "Other"
   },
-  "selectCategory": "Select category",
-  "dragHint": "Drag to reorder",
-  "filterPlaceholder": "Filter..."
+  "greetings": {
+    "morning": "Good morning",
+    "afternoon": "Good afternoon",
+    "evening": "Good evening",
+    "night": "Up late"
+  },
+  "subEmpty": "Nothing yet \u2014 what are you waiting for?",
+  "subOne": "1 task waiting for you",
+  "subTasks": "{n} tasks on your plate"
 }

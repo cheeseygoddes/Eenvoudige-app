@@ -79,6 +79,27 @@ function _(key) {
   return val || key.split(".").pop();
 }
 
+function updateGreeting() {
+  const h = new Date().getHours();
+  let timeMsg, emoji;
+  if (h < 6) { timeMsg = "night"; emoji = "\uD83C\uDF19"; }
+  else if (h < 12) { timeMsg = "morning"; emoji = "\u2600\uFE0F"; }
+  else if (h < 18) { timeMsg = "afternoon"; emoji = "\uD83C\uDF1E"; }
+  else { timeMsg = "evening"; emoji = "\uD83C\uDF03"; }
+  const greet = translations.greetings ? _( "greetings." + timeMsg) : "Good " + timeMsg + "!";
+  document.querySelector(".greeting h1").textContent = greet + " " + emoji;
+  const total = tasks.must.length + tasks.want.length;
+  const sub = document.getElementById("greetingSub");
+  if (total === 0) {
+    sub.textContent = translations.subEmpty ? _( "subEmpty") : "Nothing yet \u2014 what are you waiting for?";
+  } else if (total === 1) {
+    sub.textContent = translations.subOne ? _( "subOne") : "1 task waiting for you";
+  } else {
+    const t = translations.subTasks ? _( "subTasks") : "{n} tasks on your plate";
+    sub.textContent = t.replace("{n}", total);
+  }
+}
+
 function render() {
   const mustFilter = document.querySelector("#mustFilters .active")?.dataset?.filter || "all";
   const wantFilter = document.querySelector("#wantFilters .active")?.dataset?.filter || "all";
@@ -86,6 +107,7 @@ function render() {
   renderList("wantList", tasks.want, wantFilter, "want");
   renderStats("mustStats", tasks.must, mustFilter);
   renderStats("wantStats", tasks.want, wantFilter);
+  updateGreeting();
 }
 
 function applyFilter(items, filter) {
@@ -116,7 +138,9 @@ function renderList(listId, items, filter, type) {
   const ul = document.getElementById(listId);
   const filtered = applyFilter(items, filter);
   if (!filtered.length) {
-    ul.innerHTML = `<li class="empty-msg" data-i18n="noTasks">${_("noTasks")}</li>`;
+    const big = type === "must" ? "\u2705" : "\uD83C\uDF89";
+    const msg = _("noTasks");
+    ul.innerHTML = `<li class="empty-msg"><span class="big">${big}</span>${msg}</li>`;
     return;
   }
   ul.innerHTML = filtered.map(t => `
@@ -171,7 +195,7 @@ function openModal(type) {
   document.getElementById("modalDesc").value = "";
   document.getElementById("modalVal").value = "";
   overlay.hidden = false;
-  setTimeout(() => document.getElementById("modalDesc").focus(), 300);
+  setTimeout(() => document.getElementById("modalDesc").focus(), 350);
 }
 
 function closeModal() {
@@ -202,8 +226,9 @@ function deleteTask(type, id) {
 
 async function fetchBoredActivity() {
   const btn = document.getElementById("boredBtn");
+  const label = btn.querySelector("[data-i18n]");
   btn.disabled = true;
-  btn.innerHTML = `<span class="spinner"></span> ${_("loading")}`;
+  if (label) label.textContent = _("loading");
   try {
     const res = await fetch("https://bored.api.lewagon.com/api/activity");
     if (!res.ok) throw new Error("fail");
@@ -215,19 +240,14 @@ async function fetchBoredActivity() {
     alert("Could not fetch an activity.");
   } finally {
     btn.disabled = false;
-    btn.innerHTML = _("bored");
+    if (label) label.textContent = _("bored");
   }
 }
 
-// --- Drag to reorder (no flicker — DOM-based) ---
+// --- Drag ---
 
 function initDrag() {
   let dragEl, dragType, startY, currentTarget;
-
-  function getDragType(el) {
-    const list = el.closest(".task-list");
-    return list?.id === "mustList" ? "must" : "want";
-  }
 
   function onStart(e, handle) {
     const li = handle.closest("li");
@@ -237,10 +257,9 @@ function initDrag() {
     if (activeFilter && activeFilter !== "all") return;
 
     dragEl = li;
-    dragType = getDragType(li);
+    dragType = li.dataset.type;
     startY = e.touches ? e.touches[0].clientY : e.clientY;
     currentTarget = null;
-
     dragEl.classList.add("dragging");
 
     document.addEventListener("touchmove", onMove, { passive: false });
@@ -256,30 +275,24 @@ function initDrag() {
     const list = dragEl.parentElement;
     const items = list.querySelectorAll("li:not(.empty-msg)");
 
-    // Remove previous indicators
-    items.forEach(li => li.classList.remove("drag-over", "drag-target"));
+    items.forEach(li => li.classList.remove("drag-over"));
 
-    let target = null;
+    let placed = false;
     items.forEach(li => {
       if (li === dragEl) return;
       const r = li.getBoundingClientRect();
-      const mid = r.top + r.height / 2;
-      if (y > r.top && y < r.bottom) {
-        target = { el: li, pos: y > mid ? "after" : "before" };
+      if (y >= r.top && y <= r.bottom) {
+        const mid = r.top + r.height / 2;
+        if (y < mid) {
+          list.insertBefore(dragEl, li);
+        } else {
+          list.insertBefore(dragEl, li.nextSibling);
+        }
+        placed = true;
       }
     });
 
-    if (target) {
-      currentTarget = target;
-      target.el.classList.add("drag-over");
-      // Insert a visual gap
-      if (target.pos === "before") {
-        list.insertBefore(dragEl, target.el);
-      } else {
-        list.insertBefore(dragEl, target.el.nextSibling);
-      }
-    } else {
-      // At edges — move to top or bottom
+    if (!placed && items.length > 0) {
       const first = items[0];
       const last = items[items.length - 1];
       if (first && y < first.getBoundingClientRect().top) {
@@ -287,7 +300,6 @@ function initDrag() {
       } else if (last && y > last.getBoundingClientRect().bottom) {
         list.appendChild(dragEl);
       }
-      currentTarget = null;
     }
     if (e.cancelable) e.preventDefault();
   }
@@ -296,10 +308,9 @@ function initDrag() {
     if (!dragEl) return;
     dragEl.classList.remove("dragging");
 
-    // Read final DOM order and apply to array
     const list = dragEl.parentElement;
     const items = list.querySelectorAll("li:not(.empty-msg)");
-    items.forEach(li => li.classList.remove("drag-over", "drag-target"));
+    items.forEach(li => li.classList.remove("drag-over"));
 
     const newOrder = Array.from(items).map(li => li.dataset.id);
     const arr = tasks[dragType];
@@ -356,7 +367,6 @@ function toggleLang() {
 async function init() {
   await loadLang(lang);
 
-  // Modal
   document.querySelectorAll("[data-modal]").forEach(btn => {
     btn.addEventListener("click", () => openModal(btn.dataset.modal));
   });
@@ -369,7 +379,6 @@ async function init() {
     if (e.key === "Enter") addTaskFromModal();
   });
 
-  // Bored
   document.getElementById("boredBtn").addEventListener("click", fetchBoredActivity);
   document.getElementById("suggestionYes").addEventListener("click", () => {
     if (pendingActivity) {
@@ -388,7 +397,6 @@ async function init() {
     pendingActivity = null;
   });
 
-  // Filters
   document.querySelectorAll(".filter-bar").forEach(bar => {
     bar.addEventListener("click", e => {
       const btn = e.target.closest(".filter-btn");
@@ -399,7 +407,6 @@ async function init() {
     });
   });
 
-  // Delete via delegation
   document.addEventListener("click", e => {
     const btn = e.target.closest("[data-delete]");
     if (btn) {
@@ -408,8 +415,20 @@ async function init() {
     }
   });
 
-  // Lang
   document.getElementById("langBtn").addEventListener("click", toggleLang);
+
+  // Theme toggle (moon/sun)
+  const themeBtn = document.getElementById("themeBtn");
+  if (themeBtn) {
+    themeBtn.addEventListener("click", () => {
+      document.body.style.background =
+        document.body.style.background === "none" || !document.body.dataset.theme
+          ? "linear-gradient(145deg, #2d3436 0%, #636e72 100%)"
+          : "";
+      document.body.dataset.theme = document.body.dataset.theme === "dark" ? "" : "dark";
+      themeBtn.textContent = document.body.dataset.theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19";
+    });
+  }
 
   initDrag();
   render();

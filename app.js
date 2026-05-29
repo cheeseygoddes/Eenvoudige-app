@@ -81,13 +81,13 @@ function _(key) {
 
 function updateGreeting() {
   const h = new Date().getHours();
-  let timeMsg, emoji;
-  if (h < 6) { timeMsg = "night"; emoji = "\uD83C\uDF19"; }
-  else if (h < 12) { timeMsg = "morning"; emoji = "\u2600\uFE0F"; }
-  else if (h < 18) { timeMsg = "afternoon"; emoji = "\uD83C\uDF1E"; }
-  else { timeMsg = "evening"; emoji = "\uD83C\uDF03"; }
+  let timeMsg;
+  if (h < 6) { timeMsg = "night"; }
+  else if (h < 12) { timeMsg = "morning"; }
+  else if (h < 18) { timeMsg = "afternoon"; }
+  else { timeMsg = "evening"; }
   const greet = translations.greetings ? _( "greetings." + timeMsg) : "Good " + timeMsg + "!";
-  document.querySelector(".greeting h1").textContent = greet + " " + emoji;
+  document.querySelector(".greeting h1").textContent = greet;
   const total = tasks.must.length + tasks.want.length;
   const sub = document.getElementById("greetingSub");
   if (total === 0) {
@@ -138,9 +138,8 @@ function renderList(listId, items, filter, type) {
   const ul = document.getElementById(listId);
   const filtered = applyFilter(items, filter);
   if (!filtered.length) {
-    const big = type === "must" ? "\u2705" : "\uD83C\uDF89";
     const msg = _("noTasks");
-    ul.innerHTML = `<li class="empty-msg"><span class="big">${big}</span>${msg}</li>`;
+    ul.innerHTML = `<li class="empty-msg">${msg}</li>`;
     return;
   }
   ul.innerHTML = filtered.map(t => `
@@ -420,13 +419,16 @@ async function init() {
   // Theme toggle (moon/sun)
   const themeBtn = document.getElementById("themeBtn");
   if (themeBtn) {
+    const savedTheme = localStorage.getItem("tasklist_theme");
+    if (savedTheme === "dark") {
+      document.body.dataset.theme = "dark";
+      themeBtn.textContent = "Light";
+    }
     themeBtn.addEventListener("click", () => {
-      document.body.style.background =
-        document.body.style.background === "none" || !document.body.dataset.theme
-          ? "linear-gradient(145deg, #2d3436 0%, #636e72 100%)"
-          : "";
-      document.body.dataset.theme = document.body.dataset.theme === "dark" ? "" : "dark";
-      themeBtn.textContent = document.body.dataset.theme === "dark" ? "\u2600\uFE0F" : "\uD83C\uDF19";
+      const isDark = document.body.dataset.theme === "dark";
+      document.body.dataset.theme = isDark ? "" : "dark";
+      localStorage.setItem("tasklist_theme", isDark ? "" : "dark");
+      themeBtn.textContent = isDark ? "Dark" : "Light";
     });
   }
 

@@ -1,0 +1,375 @@
+/* ==================== RESET ==================== */
+/* Removes default margins/padding and makes tap highlights invisible on mobile */
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+/* ==================== CSS VARIABLES (light mode) ==================== */
+/* These --custom properties hold all colors so we can swap them for dark mode */
+:root {
+  --bg: linear-gradient(145deg, #fdfcf0 0%, #f5e6d3 50%, #e8d5c4 100%);
+  --text: #2d3436;
+  --text-soft: #636e72;
+  --card-bg: rgba(255,255,255,0.92);
+  --card-border: #f0f0f0;
+  --input-bg: #fafafa;
+  --input-border: #eee;
+  --chip-bg: #f0f0f0;
+  --chip-text: #636e72;
+  --handle: #d0d0d0;
+  --lang-bg: rgba(74,55,40,0.08);
+  --lang-border: rgba(74,55,40,0.15);
+  --lang-text: #4a3728;
+  --greeting: #4a3728;
+  --greeting-sub: rgba(74,55,40,0.7);
+  --shadow: rgba(0,0,0,0.1);
+  --focus: rgba(116,185,255,0.15);
+  --filter-bg: #f0f0f0;
+  --filter-text: #888;
+  --sugg-bg: #dfe6e9;
+  --sugg-text: #2d3436;
+  --stat-bg: #f0f0f0;
+  --modal-overlay: rgba(0,0,0,0.3);
+  --task-bg: #fff;
+}
+
+/* ==================== DARK MODE OVERRIDES ==================== */
+/* When <body data-theme="dark">, all variables get darker values */
+body[data-theme="dark"] {
+  --bg: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  --text: #e8e8e8;
+  --text-soft: #a0a0a0;
+  --card-bg: rgba(30,30,50,0.92);
+  --card-border: #2a2a4a;
+  --input-bg: #1e1e3a;
+  --input-border: #3a3a5a;
+  --chip-bg: #2a2a4a;
+  --chip-text: #a0a0a0;
+  --handle: #5a5a7a;
+  --lang-bg: rgba(255,255,255,0.1);
+  --lang-border: rgba(255,255,255,0.2);
+  --lang-text: #e8e8e8;
+  --greeting: #e8e8e8;
+  --greeting-sub: rgba(200,200,200,0.6);
+  --shadow: rgba(0,0,0,0.3);
+  --focus: rgba(116,185,255,0.25);
+  --filter-bg: #2a2a4a;
+  --filter-text: #888;
+  --sugg-bg: #2a2a4a;
+  --sugg-text: #e8e8e8;
+  --stat-bg: #2a2a4a;
+  --modal-overlay: rgba(0,0,0,0.6);
+  --task-bg: #252545;
+}
+
+/* ==================== BODY / BASE ==================== */
+body {
+  font-family: "Nunito", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);               /* uses light or dark gradient */
+  min-height: 100vh;                    /* fill the full screen height */
+  padding: 12px;
+  color: var(--text);                   /* text swaps with theme */
+  transition: background 0.3s, color 0.3s;  /* smooth theme switch */
+}
+
+/* ==================== LAYOUT CONTAINER ==================== */
+/* Max 600px keeps the app readable on big screens, centered */
+.container {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;  /* stacks sections vertically */
+  gap: 14px;
+  padding-bottom: 80px;    /* room for bottom bar on mobile */
+}
+
+/* ==================== TOP BAR ==================== */
+.top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 4px 4px;
+}
+
+/* ==================== GREETING ==================== */
+.greeting { text-align: left; color: var(--greeting); }
+.greeting h1 {
+  font-size: 1.6rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+.greeting .sub {
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin-top: 2px;
+  color: var(--greeting-sub);
+}
+
+/* ==================== LANGUAGE / THEME BUTTONS ==================== */
+.lang-btn {
+  background: var(--lang-bg);
+  color: var(--lang-text);
+  border: 1px solid var(--lang-border);
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);  /* bouncy effect */
+  flex-shrink: 0;
+}
+.lang-btn:hover { transform: scale(1.05); }
+.lang-btn:active { transform: scale(0.92); }
+
+/* ==================== SECTION CARDS ==================== */
+.section {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);      /* frosted-glass effect */
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 8px 40px var(--shadow);
+  position: relative;
+  transition: transform 0.2s ease, background 0.3s;
+}
+
+/* Section header with title + FAB button */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+.section-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+.must-do .section-header h2 { color: #c0392b; }    /* red for must-do */
+.want-to-do .section-header h2 { color: #2980b9; } /* blue for want-to-do */
+
+/* ==================== FAB (Float Action Button — the + button) ==================== */
+.fab {
+  width: 40px; height: 40px;
+  border: none; border-radius: 50%;
+  font-size: 1.5rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  flex-shrink: 0;
+  font-weight: 300; line-height: 1;
+}
+.fab:hover { transform: scale(1.1) rotate(90deg); }      /* spins on hover */
+.fab:active { transform: scale(0.88) rotate(90deg); box-shadow: 0 2px 6px rgba(0,0,0,0.15); }
+.fab-must { background: #e74c3c; color: #fff; }
+.fab-want { background: #3498db; color: #fff; }
+
+/* ==================== FILTER BAR ==================== */
+.filter-bar { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.filter-btn {
+  padding: 6px 14px; border: none; border-radius: 20px;
+  background: var(--filter-bg); color: var(--filter-text);
+  font-size: 0.75rem; font-weight: 600; cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.filter-btn:active { transform: scale(0.9); }
+.filter-btn.active { background: #ff6b6b; color: #fff; box-shadow: 0 4px 12px rgba(255,107,107,0.3); }
+
+/* ==================== BORED BUTTON ==================== */
+.bored-btn {
+  width: 100%; padding: 12px; border: none; border-radius: 14px;
+  font-size: 0.85rem; font-weight: 700; cursor: pointer;
+  background: linear-gradient(135deg, #74b9ff, #0984e3); color: #fff;
+  margin-bottom: 10px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+  box-shadow: 0 4px 16px rgba(9,132,227,0.25);
+}
+.bored-btn:active:not(:disabled) { transform: scale(0.96); box-shadow: 0 2px 8px rgba(9,132,227,0.15); }
+.bored-btn:disabled { background: #b2bec3; box-shadow: none; }
+
+/* ==================== SUGGESTION BAR (bored API result) ==================== */
+.suggestion {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px;
+  background: var(--sugg-bg); border-radius: 16px;
+  margin-bottom: 10px;
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);  /* bounces in */
+}
+.suggestion-text { flex: 1; font-size: 0.85rem; color: var(--sugg-text); word-break: break-word; font-weight: 500; }
+.suggestion-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.suggestion-yes, .suggestion-no {
+  width: 38px; height: 38px; border: none; border-radius: 50%;
+  cursor: pointer; font-size: 1.1rem;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.suggestion-yes { background: #00b894; color: #fff; }
+.suggestion-yes:active { transform: scale(1.2); }
+.suggestion-no { background: #e17055; color: #fff; }
+.suggestion-no:active { transform: scale(1.2); }
+.suggestion[hidden] { display: none; }  /* hides before API call */
+
+/* ==================== TASK LIST ==================== */
+.task-list { list-style: none; display: flex; flex-direction: column; gap: 8px; min-height: 40px; }
+.task-list li {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px;
+  background: var(--task-bg);
+  border-radius: 16px;
+  border: 1px solid var(--card-border);
+  box-shadow: 0 2px 8px var(--shadow);
+  transition: all 0.2s ease;
+  animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.task-list li:active { transform: scale(0.985); }
+
+/* Drag states */
+.task-list li.dragging { opacity: 0.5; box-shadow: 0 8px 30px rgba(0,0,0,0.12); transform: scale(1.02); border-color: #74b9ff; z-index: 10; }
+.task-list li.drag-over { border-color: #00b894; border-style: dashed; background: #e8f8f5; }
+
+/* Drag handle (the ≡ icon) */
+.drag-handle {
+  font-size: 1.2rem; color: var(--handle);
+  cursor: grab; touch-action: none; user-select: none;  /* prevents scroll while dragging */
+  padding: 6px 4px; flex-shrink: 0;
+  transition: color 0.2s;
+}
+.drag-handle:active { color: #b2bec3; }
+
+/* Task text + meta info row */
+.task-content { flex: 1; min-width: 0; }
+.task-text { display: block; font-size: 0.9rem; font-weight: 500; word-break: break-word; color: var(--text); }
+.task-meta { display: flex; gap: 4px; flex-wrap: wrap; font-size: 0.7rem; color: var(--text-soft); margin-top: 5px; }
+
+/* Category badge colors — each category has its own color */
+.task-meta span { background: var(--chip-bg); padding: 2px 10px; border-radius: 12px; font-weight: 600; color: var(--chip-text); }
+.task-meta .cat-work { background: #dfe6e9; color: #636e72; }
+.task-meta .cat-health { background: #e8f8f5; color: #00b894; }
+.task-meta .cat-personal { background: #ffeaa7; color: #d35400; }
+.task-meta .cat-urgent { background: #fab1a0; color: #c0392b; }
+.task-meta .cat-fun { background: #e8daef; color: #6c3483; }
+.task-meta .cat-relax { background: #d5f5e3; color: #1e8449; }
+.task-meta .cat-social { background: #fdebd0; color: #ca6f1e; }
+.task-meta .cat-learn { background: #d4e6f1; color: #1a5276; }
+.task-meta .cat-other { background: #f0f0f0; color: #7f8c8d; }
+
+/* Delete × button */
+.delete-btn {
+  background: none; border: none; color: #e17055;
+  cursor: pointer; font-size: 1.3rem; padding: 4px;
+  opacity: 0.3; flex-shrink: 0;
+  transition: opacity 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.delete-btn:active { opacity: 1; transform: scale(1.3); }
+
+/* Empty state message */
+.empty-msg { color: var(--text-soft); text-align: center; padding: 28px 16px; font-size: 0.9rem; line-height: 1.5; }
+.empty-msg .big { font-size: 2rem; display: block; margin-bottom: 8px; }
+
+/* ==================== STATS BAR ==================== */
+.stats-bar { display: flex; gap: 6px; flex-wrap: wrap; padding: 8px 0; margin-bottom: 8px; }
+.stat-chip {
+  background: var(--stat-bg); padding: 4px 12px; border-radius: 20px;
+  font-size: 0.7rem; font-weight: 600; color: var(--chip-text);
+}
+.stat-chip strong { color: var(--text); }
+
+/* ==================== SPINNER (loading animation) ==================== */
+.spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+}
+
+/* ==================== MODAL (add-task popup) ==================== */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: var(--modal-overlay);
+  backdrop-filter: blur(4px);
+  z-index: 100;
+  display: flex; align-items: flex-end; justify-content: center;  /* slides up from bottom */
+  animation: fadeIn 0.2s ease;
+}
+.modal-overlay[hidden] { display: none; }  /* hidden by default */
+
+/* The actual white sheet that slides up */
+.modal-sheet {
+  background: var(--card-bg);
+  width: 100%; max-width: 500px;
+  border-radius: 28px 28px 0 0;
+  padding: 16px 24px 34px;
+  box-shadow: 0 -8px 40px rgba(0,0,0,0.12);
+  animation: slideUp 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);  /* bouncy slide-up */
+  max-height: 85vh; overflow-y: auto;
+}
+
+/* Little drag handle at the top of the modal */
+.modal-handle {
+  width: 44px; height: 5px;
+  background: var(--input-border); border-radius: 3px;
+  margin: 0 auto 18px;
+}
+
+/* Modal header with title + close button */
+.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.modal-header h3 { font-size: 1.2rem; font-weight: 700; margin: 0; color: var(--text); }
+.modal-close {
+  background: none; border: none; font-size: 1.6rem; color: var(--text-soft);
+  cursor: pointer; padding: 4px 8px; transition: transform 0.2s;
+}
+.modal-close:active { transform: scale(1.2); color: var(--text); }
+
+/* Modal form layout */
+.modal-form { display: flex; flex-direction: column; gap: 14px; }
+.modal-form label {
+  font-size: 0.75rem; font-weight: 700; color: var(--text-soft);
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 2px; display: block;
+}
+.modal-form input, .modal-form select {
+  width: 100%; padding: 14px 16px;
+  border: 2px solid var(--input-border); border-radius: 14px;
+  font-size: 0.95rem; font-family: inherit;
+  background: var(--input-bg); color: var(--text);
+  transition: border-color 0.2s, background 0.2s;
+}
+.modal-form input:focus, .modal-form select:focus {
+  outline: none; border-color: #74b9ff; background: var(--card-bg);
+  box-shadow: 0 0 0 4px var(--focus);   /* glowing focus ring */
+}
+.modal-form .form-row { display: flex; gap: 12px; }
+.modal-form .form-row > * { flex: 1; }
+
+/* Submit button inside modal */
+.modal-add-btn {
+  padding: 16px; border: none; border-radius: 16px;
+  font-size: 1rem; font-weight: 700; cursor: pointer;
+  color: #fff; margin-top: 6px;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s;
+}
+.modal-add-btn:active { transform: scale(0.96); }
+.modal-add-must { background: #e74c3c; box-shadow: 0 4px 16px rgba(231,76,60,0.3); }
+.modal-add-want { background: #3498db; box-shadow: 0 4px 16px rgba(52,152,219,0.3); }
+
+/* ==================== ANIMATIONS ==================== */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes popIn {
+  0% { transform: scale(0.9); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+/* ==================== RESPONSIVE — tablet/desktop ==================== */
+@media (min-width: 500px) {
+  body { padding: 28px; }
+  .container { gap: 22px; padding-bottom: 0; }
+  .section { padding: 26px; }
+  .greeting h1 { font-size: 2rem; }
+  .modal-sheet { border-radius: 28px; margin-bottom: 8vh; }
+  .modal-overlay { align-items: center; }  /* centers modal on big screens instead of bottom */
+}

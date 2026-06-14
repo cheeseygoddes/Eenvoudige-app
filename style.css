@@ -34,30 +34,32 @@
 /* ==================== DARK MODE OVERRIDES ==================== */
 /* When <body data-theme="dark">, all variables get darker values */
 body[data-theme="dark"] {
-  --bg: linear-gradient(145deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-  --text: #e8e8e8;
-  --text-soft: #a0a0a0;
-  --card-bg: rgba(30,30,50,0.92);
-  --card-border: #2a2a4a;
-  --input-bg: #1e1e3a;
-  --input-border: #3a3a5a;
-  --chip-bg: #2a2a4a;
-  --chip-text: #a0a0a0;
-  --handle: #5a5a7a;
-  --lang-bg: rgba(255,255,255,0.1);
-  --lang-border: rgba(255,255,255,0.2);
-  --lang-text: #e8e8e8;
-  --greeting: #e8e8e8;
-  --greeting-sub: rgba(200,200,200,0.6);
-  --shadow: rgba(0,0,0,0.3);
-  --focus: rgba(116,185,255,0.25);
-  --filter-bg: #2a2a4a;
-  --filter-text: #888;
-  --sugg-bg: #2a2a4a;
-  --sugg-text: #e8e8e8;
-  --stat-bg: #2a2a4a;
-  --modal-overlay: rgba(0,0,0,0.6);
-  --task-bg: #252545;
+  --bg: linear-gradient(145deg, #0f0f1a 0%, #1a1a2e 40%, #12122a 100%);
+  --text: #e4e4ed;
+  --text-soft: #9898b0;
+  --card-bg: rgba(28,28,48,0.94);
+  --card-border: #2e2e50;
+  --input-bg: #1c1c36;
+  --input-border: #33335a;
+  --chip-bg: #2a2a4e;
+  --chip-text: #b0b0c8;
+  --handle: #4a4a6a;
+  --lang-bg: rgba(255,255,255,0.07);
+  --lang-border: rgba(255,255,255,0.12);
+  --lang-text: #c8c8e0;
+  --greeting: #d0d0e8;
+  --greeting-sub: rgba(180,180,210,0.55);
+  --shadow: rgba(0,0,0,0.45);
+  --focus: rgba(100,170,255,0.2);
+  --filter-bg: #262648;
+  --filter-text: #8888aa;
+  --sugg-bg: #262648;
+  --sugg-text: #d0d0e8;
+  --stat-bg: #262648;
+  --modal-overlay: rgba(0,0,0,0.7);
+  --task-bg: #222244;
+  --cat-other-bg: #2a2a4e;
+  --cat-other-text: #9898b0;
 }
 
 /* ==================== BODY / BASE ==================== */
@@ -146,8 +148,10 @@ body {
   gap: 8px;
   margin: 0;
 }
-.must-do .section-header h2 { color: #c0392b; }    /* red for must-do */
-.want-to-do .section-header h2 { color: #2980b9; } /* blue for want-to-do */
+.must-do .section-header h2 { color: #c0392b; }
+.want-to-do .section-header h2 { color: #2980b9; }
+body[data-theme="dark"] .must-do .section-header h2 { color: #e87060; }
+body[data-theme="dark"] .want-to-do .section-header h2 { color: #60a0d0; }
 
 /* ==================== FAB (Float Action Button — the + button) ==================== */
 .fab {
@@ -176,6 +180,7 @@ body {
 }
 .filter-btn:active { transform: scale(0.9); }
 .filter-btn.active { background: #ff6b6b; color: #fff; box-shadow: 0 4px 12px rgba(255,107,107,0.3); }
+body[data-theme="dark"] .filter-btn.active { background: #e05555; box-shadow: 0 4px 12px rgba(224,85,85,0.25); }
 
 /* ==================== BORED BUTTON ==================== */
 .bored-btn {
@@ -252,16 +257,46 @@ body {
 .task-meta .cat-relax { background: #d5f5e3; color: #1e8449; }
 .task-meta .cat-social { background: #fdebd0; color: #ca6f1e; }
 .task-meta .cat-learn { background: #d4e6f1; color: #1a5276; }
-.task-meta .cat-other { background: #f0f0f0; color: #7f8c8d; }
+.task-meta .cat-other { background: var(--cat-other-bg, #f0f0f0); color: var(--cat-other-text, #7f8c8d); }
+
+/* Dark mode category badge overrides */
+body[data-theme="dark"] .task-meta .cat-work { background: #3a3a5a; color: #b0b0c8; }
+body[data-theme="dark"] .task-meta .cat-health { background: #1a3a32; color: #55d6b0; }
+body[data-theme="dark"] .task-meta .cat-personal { background: #3a3520; color: #f0c060; }
+body[data-theme="dark"] .task-meta .cat-urgent { background: #3a2220; color: #e88070; }
+body[data-theme="dark"] .task-meta .cat-fun { background: #2e2040; color: #b080d0; }
+body[data-theme="dark"] .task-meta .cat-relax { background: #1a3a2a; color: #60c090; }
+body[data-theme="dark"] .task-meta .cat-social { background: #3a2a1a; color: #e0a050; }
+body[data-theme="dark"] .task-meta .cat-learn { background: #1a2a3a; color: #70b0d0; }
+
+/* Task action buttons container */
+.task-actions { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+
+/* Edit (pencil) button */
+.edit-btn {
+  background: none; border: none; color: #74b9ff;
+  cursor: pointer; font-size: 1rem; padding: 6px;
+  opacity: 0.65; flex-shrink: 0; border-radius: 8px;
+  transition: opacity 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
+}
+.edit-btn:hover { opacity: 1; background: rgba(116,185,255,0.1); }
+.edit-btn:active { transform: scale(1.3); }
+
+body[data-theme="dark"] .edit-btn { color: #6ab0f0; opacity: 0.7; }
+body[data-theme="dark"] .edit-btn:hover { background: rgba(106,176,240,0.15); }
 
 /* Delete × button */
 .delete-btn {
   background: none; border: none; color: #e17055;
-  cursor: pointer; font-size: 1.3rem; padding: 4px;
-  opacity: 0.3; flex-shrink: 0;
-  transition: opacity 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer; font-size: 1.3rem; padding: 6px;
+  opacity: 0.65; flex-shrink: 0; border-radius: 8px;
+  transition: opacity 0.2s, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.2s;
 }
-.delete-btn:active { opacity: 1; transform: scale(1.3); }
+.delete-btn:hover { opacity: 1; background: rgba(225,112,85,0.1); }
+.delete-btn:active { transform: scale(1.3); }
+
+body[data-theme="dark"] .delete-btn { color: #e07060; opacity: 0.7; }
+body[data-theme="dark"] .delete-btn:hover { background: rgba(224,112,96,0.15); }
 
 /* Empty state message */
 .empty-msg { color: var(--text-soft); text-align: center; padding: 28px 16px; font-size: 0.9rem; line-height: 1.5; }

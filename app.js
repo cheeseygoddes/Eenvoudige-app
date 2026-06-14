@@ -17,10 +17,10 @@ let translations = {};                               // loaded JSON translations
 let tasks = loadTasks();                             // { must: [...], want: [...] }
 let pendingActivity = null;                          // holds the Bored API suggestion before accept
 let modalType = "must";                              // which section the add-modal belongs to
+let editingTaskId = null;                            // id of task being edited, null = adding new
 
-/* Categories available per section — each has its own set */
-const mustCategories = ["work", "health", "personal", "urgent", "other"];
-const wantCategories = ["fun", "relax", "social", "learn", "other"];
+/* Shared categories — both sections use the same set */
+const categories = ["work", "health", "personal", "urgent", "fun", "relax", "social", "learn", "other"];
 
 /* ==================== HELPERS ==================== */
 
@@ -188,7 +188,10 @@ function renderList(listId, items, filter, type) {
           ${t.waarde ? `<span>&#9733; ${t.waarde}</span>` : ""}
         </div>
       </div>
-      <button class="delete-btn" data-delete="true">&times;</button>
+      <div class="task-actions">
+        <button class="edit-btn" data-edit="true">&#9998;</button>
+        <button class="delete-btn" data-delete="true">&times;</button>
+      </div>
     </li>`).join("");
 }
 
@@ -209,29 +212,28 @@ function renderStats(barId, items, filter) {
 
 /* ==================== MODAL (add task) ==================== */
 
-/* Opens the bottom-sheet modal, populating the category dropdown
-   based on whether we're adding to "must" or "want" */
-function openModal(type) {
+/* Opens the bottom-sheet modal. If a task object is passed, enters edit mode. */
+function openModal(type, task = null) {
   modalType = type;
+  editingTaskId = task ? task.id : null;
   const overlay = document.getElementById("taskModal");
   const title = document.getElementById("modalTitle");
   const catSelect = document.getElementById("modalCat");
   const addBtn = document.getElementById("modalAddBtn");
-  const cats = type === "must" ? mustCategories : wantCategories;
 
-  title.textContent = type === "must" ? _("mustDo") : _("wantToDo");
-  document.getElementById("modalDate").value = todayStr();
+  title.textContent = task ? _("edit") : (type === "must" ? _("mustDo") : _("wantToDo"));
+  document.getElementById("modalDate").value = task ? task.datum : todayStr();
 
   catSelect.innerHTML = `<option value="">${_("selectCategory")}</option>`;
-  cats.forEach(c => {
-    catSelect.innerHTML += `<option value="${c}">${catLabel(c)}</option>`;
+  categories.forEach(c => {
+    catSelect.innerHTML += `<option value="${c}"${task && task.categorie === c ? " selected" : ""}>${catLabel(c)}</option>`;
   });
 
   addBtn.className = "modal-add-btn " + (type === "must" ? "modal-add-must" : "modal-add-want");
-  addBtn.textContent = _("add");
+  addBtn.textContent = task ? _("save") : _("add");
 
-  document.getElementById("modalDesc").value = "";
-  document.getElementById("modalVal").value = "";
+  document.getElementById("modalDesc").value = task ? task.omschrijving : "";
+  document.getElementById("modalVal").value = task ? task.waarde : "";
   overlay.hidden = false;
   setTimeout(() => document.getElementById("modalDesc").focus(), 350);
 }
@@ -241,7 +243,7 @@ function closeModal() {
   document.getElementById("taskModal").hidden = true;
 }
 
-/* Reads the form fields, creates a new task at the top of the list (unshift),
+/* Reads the form fields, creates a new task or updates an existing one,
    saves to localStorage, re-renders, and closes the modal */
 function addTaskFromModal() {
   const datum = document.getElementById("modalDate").value || todayStr();
@@ -249,7 +251,16 @@ function addTaskFromModal() {
   const omschrijving = document.getElementById("modalDesc").value.trim();
   const waarde = parseInt(document.getElementById("modalVal").value) || 0;
   if (!omschrijving) return;
-  tasks[modalType].unshift({ id: genId(), datum, categorie, omschrijving, waarde, createdAt: Date.now() });
+
+  if (editingTaskId) {
+    const idx = tasks[modalType].findIndex(t => t.id === editingTaskId);
+    if (idx !== -1) {
+      tasks[modalType][idx] = { ...tasks[modalType][idx], datum, categorie, omschrijving, waarde };
+    }
+    editingTaskId = null;
+  } else {
+    tasks[modalType].unshift({ id: genId(), datum, categorie, omschrijving, waarde, createdAt: Date.now() });
+  }
   saveTasks();
   render();
   closeModal();
@@ -464,6 +475,19 @@ async function init() {
       btn.classList.add("active");
       render();
     });
+  });
+
+  /* Edit button — opens modal pre-filled with task data */
+  document.addEventListener("click", e => {
+    const btn = e.target.closest("[data-edit]");
+    if (btn) {
+      const li = btn.closest("li");
+      if (li) {
+        const type = li.dataset.type;
+        const task = tasks[type].find(t => t.id === li.dataset.id);
+        if (task) openModal(type, task);
+      }
+    }
   });
 
   /* Delete button — uses event delegation on document for [data-delete] */

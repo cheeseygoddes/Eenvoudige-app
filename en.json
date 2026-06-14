@@ -3,6 +3,8 @@
   "mustDo": "Must Do",
   "wantToDo": "Want To Do",
   "add": "Add",
+  "edit": "Edit Task",
+  "save": "Save",
   "bored": "I'm bored \u2014 suggest something!",
   "loading": "Loading...",
   "noTasks": "Nothing yet \u2014 what are you waiting for?",

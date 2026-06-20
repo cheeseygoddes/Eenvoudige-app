@@ -3,8 +3,8 @@
   "short_name": "TaskList",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#4CAF50",
-  "theme_color": "#4CAF50",
+  "background_color": "#f8f9fa",
+  "theme_color": "#1a73e8",
   "description": "Organize your must-do tasks and explore fun activities with the Bored API",
   "categories": ["productivity", "utilities"],
   "icons": [

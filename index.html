@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <meta name="theme-color" content="#FF8A65">
+  <meta name="theme-color" content="#1a73e8">
   <link rel="manifest" href="./manifest.json">
   <link rel="stylesheet" href="./style.css">
   <title data-i18n="appTitle">Task Planner</title>
@@ -11,55 +11,75 @@
 <body>
   <div class="container">
     <div class="top-bar">
-      <button class="lang-btn" id="langBtn">NL</button>
-      <button class="lang-btn" id="themeBtn">Dark</button>
+      <div class="top-bar-start">
+        <span class="app-name" data-i18n="appTitle">Tasks</span>
+      </div>
+      <div class="top-bar-end">
+        <button class="top-btn" id="themeBtn">Dark</button>
+        <button class="top-btn" id="langBtn">NL</button>
+      </div>
     </div>
 
     <div class="greeting">
-      <h1 data-i18n="appTitle">App &#9996;&#65039;</h1>
+      <h1 id="greetingTitle">Good morning!</h1>
       <div class="sub" id="greetingSub">Let's get stuff done</div>
     </div>
 
-    <div class="section must-do">
-      <div class="section-header">
-        <h2><span data-i18n="mustDo">Must Do</span></h2>
-        <button class="fab fab-must" data-modal="must">+</button>
-      </div>
-      <div class="filter-bar" id="mustFilters">
-        <button class="filter-btn active" data-filter="all" data-i18n="all">All</button>
-        <button class="filter-btn" data-filter="today" data-i18n="today">Today</button>
-        <button class="filter-btn" data-filter="week" data-i18n="week">This Week</button>
-        <button class="filter-btn" data-filter="month" data-i18n="month">This Month</button>
-      </div>
-      <div class="stats-bar" id="mustStats"></div>
-      <ul class="task-list" id="mustList"></ul>
+    <div class="tab-bar" id="tabBar">
+      <button class="tab-btn active" data-tab="must">
+        <span data-i18n="mustDo">Must Do</span>
+      </button>
+      <button class="tab-btn" data-tab="want">
+        <span data-i18n="wantToDo">Want To Do</span>
+      </button>
+      <div class="tab-indicator" id="tabIndicator"></div>
     </div>
 
-    <div class="section want-to-do">
-      <div class="section-header">
-        <h2><span data-i18n="wantToDo">Want To Do</span></h2>
-        <button class="fab fab-want" data-modal="want">+</button>
-      </div>
-      <div class="filter-bar" id="wantFilters">
-        <button class="filter-btn active" data-filter="all" data-i18n="all">All</button>
-        <button class="filter-btn" data-filter="today" data-i18n="today">Today</button>
-        <button class="filter-btn" data-filter="week" data-i18n="week">This Week</button>
-        <button class="filter-btn" data-filter="month" data-i18n="month">This Month</button>
-      </div>
-      <button class="bored-btn" id="boredBtn"><span data-i18n="bored">I'm bored — suggest something!</span></button>
-      <div id="suggestion" class="suggestion" hidden>
-        <span class="suggestion-text" id="suggestionText"></span>
-        <div class="suggestion-actions">
-          <button class="suggestion-yes" id="suggestionYes">&#10003;</button>
-          <button class="suggestion-no" id="suggestionNo">&#10007;</button>
+    <div class="panels" id="panelsWrapper">
+      <div class="panel" data-panel="must">
+        <div class="section">
+          <div class="section-header">
+            <h2><span data-i18n="mustDo">Must Do</span></h2>
+            <button class="fab fab-must" data-modal="must">+</button>
+          </div>
+          <div class="filter-bar" id="mustFilters">
+            <button class="filter-btn active" data-filter="all" data-i18n="all">All</button>
+            <button class="filter-btn" data-filter="today" data-i18n="today">Today</button>
+            <button class="filter-btn" data-filter="week" data-i18n="week">This Week</button>
+            <button class="filter-btn" data-filter="month" data-i18n="month">This Month</button>
+          </div>
+          <div class="stats-bar" id="mustStats"></div>
+          <ul class="task-list" id="mustList"></ul>
         </div>
       </div>
-      <div class="stats-bar" id="wantStats"></div>
-      <ul class="task-list" id="wantList"></ul>
+
+      <div class="panel" data-panel="want">
+        <div class="section">
+          <div class="section-header">
+            <h2><span data-i18n="wantToDo">Want To Do</span></h2>
+            <button class="fab fab-want" data-modal="want">+</button>
+          </div>
+          <div class="filter-bar" id="wantFilters">
+            <button class="filter-btn active" data-filter="all" data-i18n="all">All</button>
+            <button class="filter-btn" data-filter="today" data-i18n="today">Today</button>
+            <button class="filter-btn" data-filter="week" data-i18n="week">This Week</button>
+            <button class="filter-btn" data-filter="month" data-i18n="month">This Month</button>
+          </div>
+          <button class="bored-btn" id="boredBtn"><span data-i18n="bored">I'm bored — suggest something!</span></button>
+          <div id="suggestion" class="suggestion" hidden>
+            <span class="suggestion-text" id="suggestionText"></span>
+            <div class="suggestion-actions">
+              <button class="suggestion-yes" id="suggestionYes">&#10003;</button>
+              <button class="suggestion-no" id="suggestionNo">&#10007;</button>
+            </div>
+          </div>
+          <div class="stats-bar" id="wantStats"></div>
+          <ul class="task-list" id="wantList"></ul>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- Add Task Modal -->
   <div class="modal-overlay" id="taskModal" hidden>
     <div class="modal-sheet">
       <div class="modal-handle"></div>

@@ -1,5 +1,3 @@
-/* ==================== SERVICE WORKER REGISTRATION ==================== */
-/* Registers the service worker so the app works offline */
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker
     .register("./service-worker.js")
@@ -7,34 +5,27 @@ if ("serviceWorker" in navigator) {
     .catch(console.log);
 }
 
-/* ==================== STATE ==================== */
-/* All app state lives in these module-level variables */
-const STORAGE_KEY = "tasklist_data";   // localStorage key for the task array
-const LANG_KEY = "tasklist_lang";      // localStorage key for language preference
+const STORAGE_KEY = "tasklist_data";
+const LANG_KEY = "tasklist_lang";
 
-let lang = localStorage.getItem(LANG_KEY) || "en";   // current language code
-let translations = {};                               // loaded JSON translations (nl.json / en.json)
-let tasks = loadTasks();                             // { must: [...], want: [...] }
-let pendingActivity = null;                          // holds the Bored API suggestion before accept
-let modalType = "must";                              // which section the add-modal belongs to
-let editingTaskId = null;                            // id of task being edited, null = adding new
+let lang = localStorage.getItem(LANG_KEY) || "en";
+let translations = {};
+let tasks = loadTasks();
+let pendingActivity = null;
+let modalType = "must";
+let editingTaskId = null;
+let activeTab = "must";
 
-/* Shared categories — both sections use the same set */
 const categories = ["work", "health", "personal", "urgent", "fun", "relax", "social", "learn", "other"];
 
-/* ==================== HELPERS ==================== */
-
-/* Returns today as "YYYY-MM-DD" ISO string */
 function todayStr() {
   return new Date().toISOString().split("T")[0];
 }
 
-/* Generates a semi-unique ID from timestamp + random chars */
 function genId() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
 }
 
-/* Loads the task list from localStorage. Returns { must: [], want: [] } on fail. */
 function loadTasks() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -48,9 +39,6 @@ function loadTasks() {
   }
 }
 
-/* ==================== DATA MIGRATION ==================== */
-/* Ensures every task object has all required fields.
-   Old plain-string tasks are converted to full objects. */
 function migrateTask(t) {
   if (typeof t === "string") {
     return { id: genId(), datum: todayStr(), categorie: "other", omschrijving: t, waarde: 0, createdAt: Date.now() };
@@ -63,34 +51,25 @@ function migrateTask(t) {
   return t;
 }
 
-/* Writes the current tasks object back to localStorage */
 function saveTasks() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
-/* ==================== RENDERING HELPERS ==================== */
-
-/* Prevents XSS by converting text to safe HTML entities */
 function escapeHtml(text) {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
 }
 
-/* Translates a category key into a human-readable label (e.g. "work" -> "Work") */
 function catLabel(cat) {
   const labels = translations.categories || {};
   return labels[cat] || cat;
 }
 
-/* Maps a category to its CSS class name (e.g. "work" -> "cat-work") for color styling */
 function catClass(cat) {
   return "cat-" + (cat || "other");
 }
 
-/* ==================== INTERNATIONALIZATION (i18n) ==================== */
-/* Dot-notation lookup in the loaded translations object.
-   Usage: _("greetings.morning") returns the translated string, or the fallback. */
 function _(key) {
   const keys = key.split(".");
   let val = translations;
@@ -101,9 +80,6 @@ function _(key) {
   return val || key.split(".").pop();
 }
 
-/* ==================== GREETING ==================== */
-/* Updates the greeting heading based on the time of day and shows a smart
-   subtitle that reflects the total number of tasks (empty / one / many). */
 function updateGreeting() {
   const h = new Date().getHours();
   let timeMsg;
@@ -112,7 +88,7 @@ function updateGreeting() {
   else if (h < 18) { timeMsg = "afternoon"; }
   else { timeMsg = "evening"; }
   const greet = translations.greetings ? _( "greetings." + timeMsg) : "Good " + timeMsg + "!";
-  document.querySelector(".greeting h1").textContent = greet;
+  document.getElementById("greetingTitle").textContent = greet;
   const total = tasks.must.length + tasks.want.length;
   const sub = document.getElementById("greetingSub");
   if (total === 0) {
@@ -125,9 +101,6 @@ function updateGreeting() {
   }
 }
 
-/* ==================== MAIN RENDER ==================== */
-/* Reads the active filter for each section, then renders
-   the task list and stats bar for both "must" and "want". */
 function render() {
   const mustFilter = document.querySelector("#mustFilters .active")?.dataset?.filter || "all";
   const wantFilter = document.querySelector("#wantFilters .active")?.dataset?.filter || "all";
@@ -138,9 +111,6 @@ function render() {
   updateGreeting();
 }
 
-/* ==================== FILTER ==================== */
-/* Returns a subset of items based on the selected filter:
-   all / today / week (Mon-Sun) / month */
 function applyFilter(items, filter) {
   if (filter === "all") return items;
   const now = new Date();
@@ -165,10 +135,6 @@ function applyFilter(items, filter) {
   });
 }
 
-/* ==================== RENDER LIST ==================== */
-/* Builds the HTML for a <ul class="task-list">, showing filtered tasks
-   or an "empty" message if none match. Each li has a drag-handle, 
-   task content (text + meta with category/date/value), and a delete button. */
 function renderList(listId, items, filter, type) {
   const ul = document.getElementById(listId);
   const filtered = applyFilter(items, filter);
@@ -195,8 +161,6 @@ function renderList(listId, items, filter, type) {
     </li>`).join("");
 }
 
-/* ==================== STATS ==================== */
-/* Shows a total count chip + per-category count chips for the visible tasks */
 function renderStats(barId, items, filter) {
   const bar = document.getElementById(barId);
   const filtered = applyFilter(items, filter);
@@ -210,9 +174,6 @@ function renderStats(barId, items, filter) {
   bar.innerHTML = `<span class="stat-chip"><strong>${total}</strong> ${_("totalTasks")}</span>` + chips;
 }
 
-/* ==================== MODAL (add task) ==================== */
-
-/* Opens the bottom-sheet modal. If a task object is passed, enters edit mode. */
 function openModal(type, task = null) {
   modalType = type;
   editingTaskId = task ? task.id : null;
@@ -238,13 +199,10 @@ function openModal(type, task = null) {
   setTimeout(() => document.getElementById("modalDesc").focus(), 350);
 }
 
-/* Hides the modal overlay */
 function closeModal() {
   document.getElementById("taskModal").hidden = true;
 }
 
-/* Reads the form fields, creates a new task or updates an existing one,
-   saves to localStorage, re-renders, and closes the modal */
 function addTaskFromModal() {
   const datum = document.getElementById("modalDate").value || todayStr();
   const categorie = document.getElementById("modalCat").value || "other";
@@ -266,19 +224,12 @@ function addTaskFromModal() {
   closeModal();
 }
 
-/* ==================== DELETE ==================== */
-/* Filters out a task by ID from the given section ("must" or "want"), saves, re-renders */
 function deleteTask(type, id) {
   tasks[type] = tasks[type].filter(t => t.id !== id);
   saveTasks();
   render();
 }
 
-/* ==================== BORED API ==================== */
-/* Fetches a random activity suggestion from the Bored API.
-   On success, shows the suggestion bar with accept/decline buttons.
-   The endpoint used is https://bored.api.lewagon.com/api/activity
-   (the original boredapi.com is no longer maintained). */
 async function fetchBoredActivity() {
   const btn = document.getElementById("boredBtn");
   const label = btn.querySelector("[data-i18n]");
@@ -299,16 +250,114 @@ async function fetchBoredActivity() {
   }
 }
 
-/* ==================== DRAG TO REORDER ==================== */
-/* Implements drag-and-drop (touch + mouse) for reordering tasks within a list.
-   Uses direct DOM manipulation (insertBefore / appendChild) instead of re-rendering
-   the whole list, which avoids visual flicker and feels instant.
-   Drag is disabled when a filter other than "all" is active to prevent
-   index mismatches between the filtered DOM and the full array. */
+function switchTab(tab) {
+  if (tab === activeTab) return;
+  activeTab = tab;
+
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tab === tab);
+  });
+
+  const mustPanel = document.querySelector('.panel[data-panel="must"]');
+  const wantPanel = document.querySelector('.panel[data-panel="want"]');
+  const w = document.getElementById("panelsWrapper").getBoundingClientRect().width;
+
+  if (tab === "must") {
+    mustPanel.style.transform = `translateX(0)`;
+    wantPanel.style.transform = `translateX(${w}px)`;
+  } else {
+    mustPanel.style.transform = `translateX(${-w}px)`;
+    wantPanel.style.transform = `translateX(0)`;
+  }
+
+  render();
+}
+
+function initSwipe() {
+  const wrapper = document.getElementById("panelsWrapper");
+  const mustPanel = document.querySelector('.panel[data-panel="must"]');
+  const wantPanel = document.querySelector('.panel[data-panel="want"]');
+  let startX = 0;
+  let startY = 0;
+  let isSwiping = false;
+
+  function setPanelTransitions(val) {
+    mustPanel.style.transition = val;
+    wantPanel.style.transition = val;
+  }
+
+  function snapBack() {
+    setPanelTransitions("transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)");
+    const w = wrapper.getBoundingClientRect().width;
+    if (activeTab === "must") {
+      mustPanel.style.transform = "translateX(0)";
+      wantPanel.style.transform = `translateX(${w}px)`;
+    } else {
+      mustPanel.style.transform = `translateX(${-w}px)`;
+      wantPanel.style.transform = "translateX(0)";
+    }
+  }
+
+  document.addEventListener("touchstart", e => {
+    if (!e.target.closest("#panelsWrapper")) return;
+    if (e.target.closest("[data-drag]")) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwiping = false;
+  }, { passive: true });
+
+  document.addEventListener("touchmove", e => {
+    if (!e.target.closest("#panelsWrapper")) return;
+    if (e.target.closest("[data-drag]")) return;
+
+    const dx = e.touches[0].clientX - startX;
+    const dy = e.touches[0].clientY - startY;
+
+    if (!isSwiping && Math.abs(dx) > Math.abs(dy) && Math.abs(dx) > 10) {
+      isSwiping = true;
+    }
+    if (!isSwiping) return;
+
+    e.preventDefault();
+    const w = wrapper.getBoundingClientRect().width;
+    const progress = dx / w;
+
+    setPanelTransitions("none");
+
+    if (activeTab === "must") {
+      const p = Math.max(-1, Math.min(0, progress));
+      mustPanel.style.transform = `translateX(${p * w}px)`;
+      wantPanel.style.transform = `translateX(${(1 + p) * w}px)`;
+    } else {
+      const p = Math.max(0, Math.min(1, progress));
+      mustPanel.style.transform = `translateX(${(-1 + p) * w}px)`;
+      wantPanel.style.transform = `translateX(${p * w}px)`;
+    }
+  }, { passive: false });
+
+  document.addEventListener("touchend", e => {
+    if (!isSwiping) return;
+    if (!e.target.closest("#panelsWrapper")) return;
+
+    const dx = e.changedTouches[0].clientX - startX;
+    const threshold = 50;
+
+    setPanelTransitions("transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)");
+
+    if (activeTab === "must" && dx < -threshold) {
+      switchTab("want");
+    } else if (activeTab === "want" && dx > threshold) {
+      switchTab("must");
+    } else {
+      snapBack();
+    }
+    isSwiping = false;
+  }, { passive: true });
+}
+
 function initDrag() {
   let dragEl, dragType, startY, currentTarget;
 
-  /* Called on touchstart/mousedown on a [data-drag] handle */
   function onStart(e, handle) {
     const li = handle.closest("li");
     if (!li || li.classList.contains("empty-msg")) return;
@@ -329,7 +378,6 @@ function initDrag() {
     if (e.cancelable) e.preventDefault();
   }
 
-  /* On move, find where the dragged element should be inserted */
   function onMove(e) {
     if (!dragEl) return;
     const y = e.touches ? e.touches[0].clientY : e.clientY;
@@ -353,7 +401,6 @@ function initDrag() {
       }
     });
 
-    /* If the cursor is outside all items, move to top or bottom */
     if (!placed && items.length > 0) {
       const first = items[0];
       const last = items[items.length - 1];
@@ -366,7 +413,6 @@ function initDrag() {
     if (e.cancelable) e.preventDefault();
   }
 
-  /* On drop, read the new DOM order, rebuild the array, and save */
   function onEnd() {
     if (!dragEl) return;
     dragEl.classList.remove("dragging");
@@ -389,7 +435,6 @@ function initDrag() {
     document.removeEventListener("mouseup", onEnd);
   }
 
-  /* Global listeners for touch and mouse drag initiation */
   document.addEventListener("touchstart", e => {
     const h = e.target.closest("[data-drag]");
     if (h) onStart(e, h);
@@ -401,10 +446,6 @@ function initDrag() {
   });
 }
 
-/* ==================== I18N (language loading) ==================== */
-/* Fetches the JSON translation file for the given language code.
-   Updates all [data-i18n] elements with translated text,
-   toggles the language button label, then re-renders. */
 async function loadLang(l) {
   try {
     const res = await fetch(`./${l}.json`);
@@ -422,19 +463,15 @@ async function loadLang(l) {
   render();
 }
 
-/* Toggles between NL and EN and saves preference */
 function toggleLang() {
   lang = lang === "nl" ? "en" : "nl";
   localStorage.setItem(LANG_KEY, lang);
   loadLang(lang);
 }
 
-/* ==================== INITIALIZATION ==================== */
-/* Entry point: runs once when the page loads */
 async function init() {
   await loadLang(lang);
 
-  /* Modal open buttons (the FABs) */
   document.querySelectorAll("[data-modal]").forEach(btn => {
     btn.addEventListener("click", () => openModal(btn.dataset.modal));
   });
@@ -447,7 +484,6 @@ async function init() {
     if (e.key === "Enter") addTaskFromModal();
   });
 
-  /* Bored API button and suggestion accept/decline */
   document.getElementById("boredBtn").addEventListener("click", fetchBoredActivity);
   document.getElementById("suggestionYes").addEventListener("click", () => {
     if (pendingActivity) {
@@ -466,7 +502,6 @@ async function init() {
     pendingActivity = null;
   });
 
-  /* Filter buttons (All / Today / Week / Month) — toggle active class by click */
   document.querySelectorAll(".filter-bar").forEach(bar => {
     bar.addEventListener("click", e => {
       const btn = e.target.closest(".filter-btn");
@@ -477,7 +512,10 @@ async function init() {
     });
   });
 
-  /* Edit button — opens modal pre-filled with task data */
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => switchTab(btn.dataset.tab));
+  });
+
   document.addEventListener("click", e => {
     const btn = e.target.closest("[data-edit]");
     if (btn) {
@@ -490,7 +528,6 @@ async function init() {
     }
   });
 
-  /* Delete button — uses event delegation on document for [data-delete] */
   document.addEventListener("click", e => {
     const btn = e.target.closest("[data-delete]");
     if (btn) {
@@ -499,10 +536,8 @@ async function init() {
     }
   });
 
-  /* Language toggle button */
   document.getElementById("langBtn").addEventListener("click", toggleLang);
 
-  /* Theme toggle — saves to localStorage and sets body[data-theme] */
   const themeBtn = document.getElementById("themeBtn");
   if (themeBtn) {
     const savedTheme = localStorage.getItem("tasklist_theme");
@@ -519,8 +554,14 @@ async function init() {
   }
 
   initDrag();
+  initSwipe();
+
+  const firstBtn = document.querySelector(".tab-btn.active");
+  if (firstBtn) {
+    activeTab = firstBtn.dataset.tab;
+  }
+
   render();
 }
 
-/* Start the app */
 init();
